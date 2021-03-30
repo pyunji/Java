@@ -128,7 +128,7 @@ double d = 3.14f // double > float
 ```
 - 범위가 `변수 < 리터럴`인 경우 에러
 ```java
-int i 30_0000_0000; //int의 범위(+-20억) 벗어남
+int i = 30_0000_0000; //int의 범위(+-20억) 벗어남
 long l = 3.14f; // long < float
 float f = 3.14; // float < double
 ```
@@ -410,7 +410,7 @@ x = y;
     - 반드시 변수나 배열과 같은 저장공간이어야 한다.
 - rvalue : 대입 연산자의 오른쪽 피연산자
 ```java
-int i = 0;      // 에러    
+int i = 0;      
 3 = i + 3;      // 에러
 i + 3 = i;      // 에러
 
@@ -690,7 +690,7 @@ int[][] arr = {
 
 ## Arrays클래스로 배열 다루기
 ### 배열의 비교와 출력 - `equals()`, `toString()`
-    - 2차원 배열에서는 `deepEquals()`, `deepToString()`
+- 2차원 배열에서는 `deepEquals()`, `deepToString()`
 ### 배열의 복사 - `copyOf()`, `copyOfRange()`
 ### 배열의 정렬 - `sort()`
 ```java
