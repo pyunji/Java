@@ -23,15 +23,27 @@
 ### List인터페이스 - 순서O, 중복O
 ![list인터페이스](./img/list인터페이스.jpg)
 - ArrayList와 LinkedList가 핵심!
+
+<br>
+
 ![List인터페이스의 메서드](./img/List메서드.jpg)
 
 ### Set인터페이스 - 순서X, 중복X
 ![Set인터페이스](./img/set인터페이스.jpg)
+
+<br>
+
 ![Set인터페이스의 메서드](./img/set메서드.jpg)
+
+<br>
+
 ![Set인터페이스의 메서드2](./img/set메서드_2.jpg)
 
 ### Map인터페이스 - 순서X, 중복(키X, 값O)
 ![Map인터페이스](./img/map인터페이스.jpg)
+
+<br>
+
 ![Map인터페이스의 메서드](./img/map메서드.jpg)
 
 ## ArrayList
@@ -155,6 +167,9 @@ list2:[0, AA, B, C]
     - 배열로 구현하는 것이 유리
 - 큐(Queue): FIFO구조. 제일 먼저 저장한 것을 제일 먼저 꺼내게 된다.
     - 링크드 리스트로 구현하는 것이 유리
+
+<br>
+
 ![Stack_Queue01](./img/Stack_Queue01.jpg)
 
 ## Stack 클래스의 메서드
@@ -262,7 +277,7 @@ class Ex11_4 {
 	public static void save(String input) {
 		// queue에 저장한다.
 		if(!"".equals(input))	// if(input != null && !input.equals(""))
-          q.offer(input);
+          	q.offer(input);
 
 		// queue의 최대크기를 넘으면 제일 처음 입력된 것을 삭제한다.
 		if(q.size() > MAX_SIZE)  // size()는 Collection인터페이스에 정의
@@ -548,7 +563,7 @@ chArr=[A, B, C, D, E]
 index of B =1
 ```
 # ❗ Comparator와 Comparable (어려우니까 복습 꼼꼼히!)
-- 객체 정렬에 필요함 메서드(정렬기준 제공)를 정의한 인터페이스
+- 객체 정렬에 필요한 메서드(정렬기준 제공)를 정의한 인터페이스
 	- Comparable : 기본 정렬기준을 구현하는데 사용
 	- Comparator : 기본 정렬기준 외에 다른 기준으로 정렬하고자할 때 사용
 ```java
@@ -619,14 +634,17 @@ strArr=[tiger, lion, cat, Dog]
 CASE_INSENSITIVE_ORDER 부연설명
 ```java
 public static final Comparator<String> CASE_INSENSITIVE_ORDER 
-									 = new CaseInsensitiveComparator(); 
-									 // String 클래스의 내부 클래스(Comparator 인터페이스 구현)
+				= new CaseInsensitiveComparator(); 
+				// String 클래스의 내부 클래스(Comparator 인터페이스 구현)
 ```
 ### Integer와 Comparable
 - String과 Float, Integer과 같이 비교가 가능한 클래스들은 자체적으로 기본 정렬 기준을 가지고 있다.(Comparable을 구현한다.)
 ### 정렬과 정렬기준
 - 정렬은 이미 여러 방법으로 구현해 놓은 불변의 방법이다.
 - 정렬 기준은 정렬에 제공되는 가변의 개념이다.  
+
+<br>
+
 기본 버블정렬 코드
 ```java
 static void sort(int[] intArr) {
@@ -1136,20 +1154,20 @@ K : ###### 6
 2. 컬렉션의 동기화 - `synchronizedXXX()`
 - Vector()는 동기화가 되고 ArrayList()는 동기화가 안된다. 필요할 때만 동기화를 하는것이 더 효율적이기 때문에 ArrayList를 사용한다.
 ```java
-static Collection synchronizedCollection(Collection c)
-static List		  synchronizedList(List list)
-static Set		  synchronizedSet(Set s)
-static Map		  synchronizedMap(Map m)
-static SortedSet  synchronizedSortedSet(SortedSet s)
-static SortedMap  synchronizedSortedMap(SortedMap m)
+static Collection 	synchronizedCollection(Collection c)
+static List			synchronizedList(List list)
+static Set		 	synchronizedSet(Set s)
+static Map		  	synchronizedMap(Map m)
+static SortedSet  	synchronizedSortedSet(SortedSet s)
+static SortedMap  	synchronizedSortedMap(SortedMap m)
 ```
 3. 변경불가(readOnly) 컬렉션 만들기 - `unmodifiableXXX()`
 ```java
 static Collection 	unmodifiableCollection(Collection c)
-static List		  	unmodifiableList(List list)
-static Set		  	unmodifiableSet(Set s)
-static Map		  	unmodifiableMap(Map m)
-static NavigableSet unmodifiableNavigableSet(NavigableSet s)
+static List			unmodifiableList(List list)
+static Set			unmodifiableSet(Set s)
+static Map			unmodifiableMap(Map m)
+static NavigableSet	unmodifiableNavigableSet(NavigableSet s)
 static SortedSet 	unmodifiableSortedSet(SortedSet s)
 static NavigableMap	unmodifiableNavigableMap(NavigableMap m)
 static SortedMap	unmodifiableSortedMap(SortedMap m)
@@ -1157,7 +1175,7 @@ static SortedMap	unmodifiableSortedMap(SortedMap m)
 4. 싱글톤 컬렉션 만들기 - `singletonXXX()`
 - 싱글톤 컬렉션: 객체 1개만 담을 수 있는 컬렉션
 ```java
-static List singletonList(Object o)
+static List	singletonList(Object o)
 static Set	singleton(Object o)	//singletonSet이 아님
 static Map 	singletonMap(Object key, Object value)
 ```
@@ -1203,7 +1221,7 @@ class Ex11_19 {
 		shuffle(list);    // 저장된 요소의 위치를 임의로 변경 
 		System.out.println(list);
 
-		sort(list, reverseOrder()); // 역순정렬 reverse(list);�� �룞�씪 
+		sort(list, reverseOrder()); // 역순정렬 reverse(list);
 		System.out.println(list);
 		
 		sort(list);       // 정렬
