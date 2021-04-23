@@ -338,7 +338,7 @@ String date = String.valueOf(dd);			// date = "Sun Apr 18 22:39:29 KST 2021"
 ```java
 String animals = "dog,cat,bear";
 String[] arr   = animals.split(",");	// 문자열을 ','를 구분자로 나눠서 배열에 저장
-String str 	   = String.join("-", arr);	// 배열의 문자열을 '-'로 구분해서 결합
+String str	   = String.join("-", arr);	// 배열의 문자열을 '-'로 구분해서 결합
 System.out.println(str);				// dog-cat-bear
 ```
 
@@ -356,11 +356,11 @@ int i2 = Ingeter.valueOf("100");	// 방법 2: 100, parseInt의 새로운 방법
 Integer i2 = Integer.valueOf("100");	// valueOf 메서드의 반환타입은 원래 Integer인데 오토 박싱으로 인해 참조형 Integer를 기본형 int로 바꿔줌
 ```
 ## StringBuffer클래스
-- 문자열을 저장하고 다루기 위판 클래스
+- 문자열을 저장하고 다루기 위한 클래스
 - String처럼 문자열 배열(char[])을 내부적으로 가지고 있다.
 - 그러나, String과 달리 내용을 변경할 수 있다.(mutable)
 ## StringBuffer의 생성자
-- 배열은 길이 변경불가. 공간이 부족하면 새로운 배열 생성해야
+- 배열은 길이 변경불가. 공간이 부족하면 새로운 배열 생성해야함
 	- 1. 새로운 배열 생성
 	- 2. 내용 복사
 	- 3. 참조 변경
