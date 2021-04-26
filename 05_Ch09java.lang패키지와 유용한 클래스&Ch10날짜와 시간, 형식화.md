@@ -312,7 +312,7 @@ String s1 = s.toUpperCase();	// s1 = "HELLO"
 - `String trim()`: 문자열의 왼쪽 끝과 오른쪽 끝에 있는 공백을 없앤 결과를 반환한다. 이 때 문자열 중간에 있는 공백은 제거되지 않는다.
 ```java
 String s = "   Hello World   ";
-String s1 = s.trimg();	// s1 = "Hello World"
+String s1 = s.trim();	// s1 = "Hello World"
 ```
 - `static String valueOf(boolean b)`
   `static String valueOf(char c)`
@@ -453,24 +453,24 @@ class Ex9_14 {
 		Integer i  = new Integer(100);
 		Integer i2 = new Integer(100);
 
-		System.out.println("i==i2 ? "+(i==i2));					// i==i2 ? false
+		System.out.println("i==i2 ? "+(i==i2));				// i==i2 ? false
 		System.out.println("i.equals(i2) ? "+i.equals(i2));		// i.equals(i2) ? true
-		System.out.println("i.compareTo(i2)="+i.compareTo(i2)); // i.compareTo(i2)=0
+		System.out.println("i.compareTo(i2)="+i.compareTo(i2)); 	// i.compareTo(i2)=0
 		System.out.println("i.toString()="+i.toString());		// i.toString()=100
 
 		System.out.println("MAX_VALUE="+Integer.MAX_VALUE);		// MAX_VALUE=2147483647
 		System.out.println("MIN_VALUE="+Integer.MIN_VALUE);		// MIN_VALUE=-2147483648
 		System.out.println("SIZE="+Integer.SIZE+" bits");		// SIZE=32 bits
-		System.out.println("BYTES="+Integer.BYTES+" bytes");	// BYTES=4 bytes
-		System.out.println("TYPE="+Integer.TYPE);				// TYPE=int
+		System.out.println("BYTES="+Integer.BYTES+" bytes");		// BYTES=4 bytes
+		System.out.println("TYPE="+Integer.TYPE);			// TYPE=int
 	}
 }
 ```
 ## Number클래스
 - 모든 숫자 래퍼 클래스의 조상
 ### 래퍼 객체 -> 기본형
-Inter(var).intValue() -> int
-Long(var).longValue() -> long
+Integer(var).intValue() -> int  
+Long(var).longValue() -> long  
 ...
 
 ## 문자열을 숫자로 변환하기
@@ -529,6 +529,7 @@ int lastDayOfMonth = cal.getActualMaximum(Calendar.DATE);	// 이 달의 마지�
 ```
 #### Calendar에 정의된 필드  
 - 날짜
+
 |필드명|설명|
 |---|---|
 |YEAR|년|
@@ -541,6 +542,7 @@ int lastDayOfMonth = cal.getActualMaximum(Calendar.DATE);	// 이 달의 마지�
 |DAY_OF_WEEK|요일(1~7, 1은 일요일)|
 |DAY_OF_WEEK_IN_MONTH|그 달의 몇 번째 요일|
 - 시간
+
 |필드명|설명|
 |---|---|
 |HOUR|시간(0~11)|
@@ -588,7 +590,7 @@ class Ex10_2 {
 
 		// 두 날짜간의 차이를 얻으려면, getTimeInMillis() 천분의 일초 단위로 변환해야한다.
 		long difference = 
-            (date2.getTimeInMillis() - date1.getTimeInMillis())/1000;
+            		(date2.getTimeInMillis() - date1.getTimeInMillis())/1000;
 		System.out.println("그 날(date1)부터 지금(date2)까지 "
                                            + difference +"초가 지났습니다.");
 		System.out.println("일(day)로 계산하면 "+ difference/(24*60*60) 
@@ -968,21 +970,4 @@ output
 오늘은 올 해의 17번째 주입니다.
 오늘은 이 달의 4번째 주입니다.
 오늘은 이 달의 3번째 월요일입니다.
-```
-### 예제 2
-```java
-import java.util.*;
-import java.text.*;
-
-class Ex10_9 {
-	public static void main(String[] args) {
-		DateFormat df  = new SimpleDateFormat("yyyy년 MM월 dd일");
-		DateFormat df2 = new SimpleDateFormat("yyyy/MM/dd");
-
-		try {
-			Date d = df.parse("2019년 11월 23일");
-			System.out.println(df2.format(d));	// 2019/11/23
-		} catch(Exception e) {}
-	} // main
-}
 ```
