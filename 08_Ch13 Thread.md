@@ -329,3 +329,548 @@ output
 |BLOCKED|동기화블럭에 의해서 일시정지된 상태(lock이 풀릴 때까지 기다리는 상태)|
 |WAITING, TIMED_WAITING|쓰레드의 작업이 종료되지는 않았지만 실행가능하지 않은(unrunnable) 일시정지상태. <br>TIMED_WAITING은 일시정지시간이 지정된 경우를 의미|
 |TERMINATED|쓰레드의 작업이 종료된 상태|
+
+
+## 쓰레드의 실행제어
+- 쓰레드의 실행을 제어할 수 있는 메서드가 제공된다.
+  이 들을 활용해서 보다 효율적인 프로그램을 작성할 수 있다.
+### 메서드
+
+|메서드|설명|
+|---|---|
+|`static void sleep(long millis)`<br>`static void sleep(long millis, int nanos)`|지정된 시간(천분의 일초 단위)동안 쓰레드를 일시정지시킨다. 지정한 시간이 지나고 나면, 자동적으로 다시 실행대기상태가 된다.|
+|`void join()`<br>`void join(long millis)`<br>`void join(long millis, int nanos)`|다른 쓰레드 기다리기.<br>지정된 시간동안 쓰레드가 실행되도록 한다. 지정된 시간이 지나거나 작업이 종료되면 join()을 호출한 쓰레드로 다시 돌아와 실행을 계속한다.|
+|`void interrupt()`|깨우기.<br>sleep()이나 join()에 의해 일시정지상태인 쓰레드를 깨워서 실행대기상태로 만든다. 해당 쓰레드에서는 Interrupted Exception이 발생함으로써 일시정지 상태를 벗어나게 된다.|
+|`void stop()`|쓰레드를 즉시 종료시킨다.|
+|`void suspend()`|쓰레드를 일시정지시킨다. resume()을 호출하면 다시 실행대기상태가 된다.|
+|`void resume()`|suspend()에 의해 일시정지상태에 있는 쓰레드를 실행대기상태로 만든다.|
+|`static void yield()`|실행 중에 자신에게 주어진 실행시간을 다른 쓰레드에게 양보(yield)하고 자신은 실행대기상태가 된다.|
+
+- static 메서드는 쓰레드 자기 자신에게만 호출 가능.(ex. interrupt()는 다른 쓰레드를 깨울 수 있지만 static 메서드는 자기 자신에게만 적용된다.)
+
+# sleep(), interrupt()
+## sleep()
+- 현재 쓰레드를 지정된 시간동안 멈추게 한다.
+- 예외처리를 해야한다. (InterruptedException이 발생하면 깨어남)
+```java
+try {
+	Thread.sleep(1, 500000);	// 쓰레드를 0.0015초동안 멈추게한다.
+} catch(InterruptedException e) { }
+```
+예외처리를 매번 하기 귀찮으면 별도의 메서드로 만들면 된다.
+```java
+void delay(long millis) {
+	try {
+		Thread.sleep(millis);
+	} catch(InterruptedException e) { }
+}
+```
+- 특정 쓰레드를 지정해서 멈추게 하는 것은 불가능하다.
+```java
+public static void main(String args[]) {
+	ThreadEx8_1 th1 = new ThreadEx8_1();
+	ThreadEx8_2 th2 = new ThreadEx8_2();
+	th1.start();
+	th2.start();
+
+	try {
+		// 의도한 대로 th1이 멈추는 것이 아닌 해당 메서드를 실행하는 main 쓰레드가 멈추게 된다.
+		th1.sleep(2000);	
+	} catch(InterruptedException e) { }
+}
+```
+
+## interrupt()
+- 대기상태(WAITING)인 쓰레드를 실행대기 상태(RUNNABLE)로 만든다.
+```
+void 	interrupt()		쓰레드의 interrupted상태를 false에서 true로 변경.
+boolean isInterrupted()		쓰레드의 interrupted상태를 반환.
+static boolean interrupted()	현재 쓰레드의 interrupted상태를 알려주고, false로 초기화.
+```
+
+### interrupt() 예제
+```java
+import javax.swing.JOptionPane;
+
+class Ex13_9 {
+	public static void main(String[] args) throws Exception {
+		ThreadEx9_1 th1 = new ThreadEx9_1();
+		th1.start();
+
+		String input = JOptionPane.showInputDialog("아무 값이나 입력하세요."); 
+		System.out.println("입력하신 값은 " + input + "입니다.");
+		th1.interrupt();  // interrupt()를 호출하면, interrupted상태가 true가 된다.
+	
+	}
+}
+
+class ThreadEx9_1 extends Thread {
+	public void run() {
+		int i = 10;
+
+		while(i!=0 && !isInterrupted()) {
+			System.out.println(i--);
+			for(long x=0;x<2500000000L;x++); // 시간 지연
+		}
+		
+		System.out.println("isInterrupted(): "+this.isInterrupted());	// true
+		System.out.println("isInterrupted(): "+this.isInterrupted());	// true
+		System.out.println("interrupted(): "+Thread.interrupted());		// true
+		System.out.println("interrupted(): "+Thread.interrupted());		// false
+		
+		System.out.println("카운트가 종료되었습니다.");
+	} 
+}
+```
+output
+```
+10
+9
+8
+7
+입력하신 값은 good입니다.
+isInterrupted(): true
+isInterrupted(): true
+interrupted(): true
+interrupted(): false
+카운트가 종료되었습니다.
+```
+
+# suspend(), resume()
+## suspend(), resume(), stop()
+- 쓰레드의 실행을 일시정지, 재개, 완전정지 시킨다.
+```
+void suspend()	쓰레드를 일시정지 시킨다.
+void resume()	suspend()에 의해 일시정지된 쓰레드를 실행대기상태로 만든다.
+void stop()	쓰레드를 즉시 종료시킨다.
+```
+- suspend(), resume(), stop()은 교착상태에 빠지기 쉬워서 deprecated되었다.
+  그래서 직접 작성하기도 한다.
+```java
+class ThreadEx17_1 implements Runnable {
+	boolean suspended = false;
+	boolean stopped = false;
+
+	public void run() {
+		while(!stopped) {
+			if(!suspended) {
+				/* 쓰레드가 수행할 코드를 작성 */
+			}
+		}
+	}
+
+	public void suspend() { suspended = true; }
+	public void resume() { suspended = false; }
+	public void stop() { stopped = true; }
+}
+```
+
+# join(), yield()
+## join()
+- 지정된 시간동안 특정 쓰레드가 작업하는 것을 기다린다.
+```
+void join()				작업이 모두 끝날 때까지
+void join(long millis)			천분의 일초 동안
+void join(long millis, int nanos)	천분의 일초 + 나노초 동안
+```
+- 예외처리를 해야한다. (InterruptedException이 발생하면 작업 재개)
+### 예제 1
+```java
+class Ex13_11 {
+	static long startTime = 0;
+
+	public static void main(String args[]) {
+		ThreadEx11_1 th1 = new ThreadEx11_1();
+		ThreadEx11_2 th2 = new ThreadEx11_2();
+		th1.start();
+		th2.start();
+		startTime = System.currentTimeMillis();
+		
+		// 아래의 join메서드가 있는 try catch 블럭을 없애면 소요시간이 먼저 찍힘
+		try {
+			th1.join();	// th1의 작업이 끝날 때까지 main쓰레드를 기다리게 한다.
+			th2.join();	// th2의 작업이 끝날 때까지 main쓰레드를 기다리게 한다.
+		} catch(InterruptedException e) {}
+
+		System.out.print("소요시간:" + (System.currentTimeMillis() - Ex13_11.startTime));
+	}
+}
+
+class ThreadEx11_1 extends Thread {
+	public void run() {
+		for(int i=0; i < 100; i++) {
+			System.out.print(new String("-"));
+		}
+	}
+}
+
+class ThreadEx11_2 extends Thread {
+	public void run() {
+		for(int i=0; i < 100; i++) {
+			System.out.print(new String("|"));
+		}
+	}
+}
+```
+output
+```
+----------------------------------------------------------------------------------------------------||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||소요시간:4
+```
+join메서드 없이 실행하면 main메서드의 쓰레드가 두개의 쓰레드를 기다리지 않고 먼저 끝나버린다.
+```java
+class Ex13_11 {
+	static long startTime = 0;
+
+	public static void main(String args[]) {
+		ThreadEx11_1 th1 = new ThreadEx11_1();
+		ThreadEx11_2 th2 = new ThreadEx11_2();
+		th1.start();
+		th2.start();
+		startTime = System.currentTimeMillis();
+		
+		// 아래의 join메서드가 있는 try catch 블럭을 없애면 소요시간이 먼저 찍힘
+//		try {
+//			th1.join();	// th1의 작업이 끝날 때까지 main쓰레드를 기다리게 한다.
+//			th2.join();	// th2의 작업이 끝날 때까지 main쓰레드를 기다리게 한다.
+//		} catch(InterruptedException e) {}
+
+		System.out.print("소요시간:" + (System.currentTimeMillis() - Ex13_11.startTime));
+	}
+}
+
+class ThreadEx11_1 extends Thread {
+	public void run() {
+		for(int i=0; i < 100; i++) {
+			System.out.print(new String("-"));
+		}
+	}
+}
+
+class ThreadEx11_2 extends Thread {
+	public void run() {
+		for(int i=0; i < 100; i++) {
+			System.out.print(new String("|"));
+		}
+	}
+}
+```
+output
+```
+|||||||||||||||||||||||소요시간:0--------------------------------------------------------------------------------------|||||||||||||||||||||||||||||||||||||||||||||||||||--------------||||||||||||||||||||||||||
+```
+## yield()
+- 남은 시간을 다음 쓰레드에게 양보하고, 자신(현재 쓰레드)은 실행대기한다.
+```java
+class ThreadEx17_1 implements Runnable {
+	boolean suspended = false;
+	boolean stopped = false;
+
+	public void run() {
+		while(!stopped) {
+			if(!suspended) {
+				/* 쓰레드가 수행할 코드를 작성 */
+			}
+		}
+	}
+
+	public void suspend() { suspended = true; }
+	public void resume() { suspended = false; }
+	public void stop() { stopped = true; }
+}
+```
+위의 코드의 경우 suspended가 true이면 아무것도 수행하지 않고 while문만 바쁘게 계속 돌면서 busy-waiting한다.  
+따라서 차라리 다른 쓰레드에게 자원을 양보하는 것이 낫다.
+```java
+class ThreadEx17_1 implements Runnable {
+	boolean suspended = false;
+	boolean stopped = false;
+
+	public void run() {
+		while(!stopped) {
+			if(!suspended) {
+				/* 쓰레드가 수행할 코드를 작성 */
+			} else {
+				Thread.yield();
+			}
+		}
+	}
+
+	public void suspend() { suspended = true; }
+	public void resume() { suspended = false; }
+	public void stop() { stopped = true; }
+}
+```
+
+# 쓰레드의 동기화
+## 쓰레드의 동기화 (synchronization)
+- 멀티 쓰레드 프로세스에서는 여러 쓰레드가 같은 자원을 공유하기 때문에 다른 쓰레드의 작업에 영향을 미칠 수 있다.
+- 진행중인 작업이 다른 쓰레드에게 간섭받지 않게 하려면 '동기화'가 필요  
+`쓰레드의 동기화 - 한 쓰레드가 진행중인 작업을 다른 쓰레드가 간섭하지 못하게 막는 것`  
+- 동기화하려면 간섭받지 않아야 하는 문장들을 '임계 영역'으로 설정
+- 임계영역은 락(lock)을 얻은 단 하나의 쓰레드만 출입가능(객체 1개에 락 1개)
+## synchronized를 이용한 동기화
+- synchronized로 임계영역(lock이 걸리는 영역)을 설정하는 방법 2가지
+
+1. 메서드 전체를 임계영역으로 지정
+```
+public synchronized void calcSum() {
+	...
+}
+```
+2. 특정한 영역을 임계 영역으로 지정
+```
+synchronized(객체의 참조변수) {
+	...
+}
+```
+
+### 예제
+동기화 되어있지 않은 경우
+```java
+class Ex13_12 {
+	public static void main(String args[]) {
+		Runnable r = new RunnableEx12();
+		new Thread(r).start(); // ThreadGroup에 의해 참조되므로 gc대상이 아니다.
+		new Thread(r).start(); // ThreadGroup에 의해 참조되므로 gc대상이 아니다.
+	}
+}
+
+class Account {
+	private int balance = 1000;
+
+	public  int getBalance() {
+		return balance;
+	}
+
+	public void withdraw(int money){
+		if(balance >= money) {
+			try { Thread.sleep(1000);} catch(InterruptedException e) {}
+			balance -= money;
+		}
+	} // withdraw
+}
+
+class RunnableEx12 implements Runnable {
+	Account acc = new Account();
+
+	public void run() {
+		while(acc.getBalance() > 0) {
+			// 100, 200, 300중의 한 값을 임으로 선택해서 출금(withdraw)
+			int money = (int)(Math.random() * 3 + 1) * 100;
+			acc.withdraw(money);
+			System.out.println("balance:"+acc.getBalance());
+		}
+	} // run()
+}
+```
+output
+```
+balance:600
+balance:600
+balance:500
+balance:300
+balance:200
+balance:100
+balance:100
+balance:-100
+balance:-200
+```
+음수인 잔고가 나오게 된다. 따라서 출금 메서드에 synchronized 키워드를 붙여야한다.
+```java
+class Ex13_12 {
+	public static void main(String args[]) {
+		Runnable r = new RunnableEx12();
+		new Thread(r).start(); // ThreadGroup에 의해 참조되므로 gc대상이 아니다.
+		new Thread(r).start(); // ThreadGroup에 의해 참조되므로 gc대상이 아니다.
+	}
+}
+
+class Account {
+	private int balance = 1000;	// private으로 해야 동기화의 의미가 있다.
+
+	public  synchronized int getBalance() {
+		return balance;
+	}
+
+	public synchronized void withdraw(int money){
+		if(balance >= money) {
+			try { Thread.sleep(1000);} catch(InterruptedException e) {}
+			balance -= money;
+		}
+	} // withdraw
+}
+
+class RunnableEx12 implements Runnable {
+	Account acc = new Account();
+
+	public void run() {
+		while(acc.getBalance() > 0) {
+			// 100, 200, 300중의 한 값을 임으로 선택해서 출금(withdraw)
+			int money = (int)(Math.random() * 3 + 1) * 100;
+			acc.withdraw(money);
+			System.out.println("balance:"+acc.getBalance());
+		}
+	} // run()
+}
+```
+# wait()과 notify()
+- 동기화의 효율을 높이기 위해 wait(), notify()를 사용.
+- Object클래스에 정의되어 있으며, 동기화 블록 내에서만 사용할 수 있다.
+```
+wait()		객체의 lock을 풀고 쓰레드를 해당 객체의 waiting pool에 넣는다.
+notify()	waiting pool에서 대기중인 쓰레드 중의 하나를 깨운다.
+notifyAll()	waiting pool에서 대기중인 모든 쓰레드를 깨운다.
+```
+```java
+class Account {
+	int balance = 1000;
+
+	public synchronized void withdraw(int money) {
+		while(balance < money) {	// 출금할 돈보다 잔고가 적으면
+			try {
+				wait();	// 대기 - 락을 풀고 기다린다. 통지를 받으면 락을 재획득(ReEntrance)
+			} catch(InterruptedException e) { }
+		}
+
+		balance -= money;
+	}
+
+	public synchronized void deposit(int money) {
+		balance += money;
+		notify();	// 통지 - 대기중인 쓰레드 중 하나에게 알림.
+	}
+}
+```
+### 예제1: 동기화를 안한 경우
+- 요리사는 Table에 음식을 추가. 손님은 Table의 음식을 소비
+- 요리사와 손님이 같은 객체(Table)를 공유하므로 동기화가 필요
+![8](./img/thread08.jpg)
+<br>
+
+![9](./img/thread09.jpg)
+
+<br>
+
+- `ConcurrentModificationException`: ArrayList와 같은 컬렉션 읽기 수행 중 변경이 발생할 때 생기는 에러
+- `IndexOutofBoundException`
+### 예제 1의 문제점 해결
+![10](./img/thread10.jpg)
+<br>
+
+![11](./img/thread11.jpg)
+
+<br>
+
+### 예제 2: 위의 경우 에러는 안나지만 진행이 안됨
+![12](./img/thread12.jpg)
+
+- 손님이 기다리는 경우: 테이블에 음식이 없는 경우
+- 요리사가 기다리는 경우: 테이블에 음식이 가득 찬 경우
+<br>
+
+![13](./img/thread13.jpg)
+- wait()과 notify()를 손님에게 하는지 요리사에게 하는지 구별이 안된다는 문제점이 있음.
+	- Lock & Condition으로 이를 해소할 수 있음.
+<br>
+
+전체 코드
+```java
+import java.util.ArrayList;
+
+class Customer2 implements Runnable {
+	private Table2  table;
+	private String food;
+
+	Customer2(Table2 table, String food) {
+		this.table = table;  
+		this.food  = food;
+	}
+
+	public void run() {
+		while(true) {
+			try { Thread.sleep(100);} catch(InterruptedException e) {}
+			String name = Thread.currentThread().getName();
+			
+			table.remove(food);
+			System.out.println(name + " ate a " + food);
+		} // while
+	}
+}
+
+class Cook2 implements Runnable {
+	private Table2 table;
+	
+	Cook2(Table2 table) { this.table = table; }
+
+	public void run() {
+		while(true) {
+			int idx = (int)(Math.random()*table.dishNum());
+			table.add(table.dishNames[idx]);
+			try { Thread.sleep(10);} catch(InterruptedException e) {}
+		} // while
+	}
+}
+
+class Table2 {
+	String[] dishNames = { "donut","donut","burger" }; // donut의 확률을 높인다.
+	final int MAX_FOOD = 6;
+	private ArrayList<String> dishes = new ArrayList<>();
+
+	public synchronized void add(String dish) {
+		while(dishes.size() >= MAX_FOOD) {
+				String name = Thread.currentThread().getName();
+				System.out.println(name+" is waiting.");
+				try {
+					wait(); // COOK쓰레드를 기다리게 한다.
+					Thread.sleep(500);
+				} catch(InterruptedException e) {}	
+		}
+		dishes.add(dish);
+		notify();  // 기다리고 있는 CUST를 깨우기 위함.
+		System.out.println("Dishes:" + dishes.toString());
+	}
+
+	public void remove(String dishName) {
+		synchronized(this) {	
+			String name = Thread.currentThread().getName();
+
+			while(dishes.size()==0) {
+					System.out.println(name+" is waiting.");
+					try {
+						wait(); // CUST쓰레드를 기다리게 한다.
+						Thread.sleep(500);
+					} catch(InterruptedException e) {}	
+			}
+
+			while(true) {
+				for(int i=0; i<dishes.size();i++) {
+					if(dishName.equals(dishes.get(i))) {
+						dishes.remove(i);
+						notify(); // 잠자고 있는 COOK을 깨우기 위함 
+						return;
+					}
+				} // for문의 끝
+
+				try {
+					System.out.println(name+" is waiting.");
+					wait(); // 원하는 음식이 없는 CUST쓰레드를 기다리게 한다.
+					Thread.sleep(500);
+				} catch(InterruptedException e) {}	
+			} // while(true)
+		} // synchronized
+	}
+	public int dishNum() { return dishNames.length; }
+}
+
+class Ex13_15 {
+	public static void main(String[] args) throws Exception {
+		Table2 table = new Table2();
+
+		new Thread(new Cook2(table), "COOK").start();
+		new Thread(new Customer2(table, "donut"),  "CUST1").start();
+		new Thread(new Customer2(table, "burger"), "CUST2").start();
+		Thread.sleep(2000);
+		System.exit(0);
+	}
+}
+```
