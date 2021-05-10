@@ -359,5 +359,172 @@ Predicate<Integer> r = i -> i%2==0;
 ```
 ```java
 Predicate<Integer> notP = p.negate();   // i>=100
-Predicate<Integer> all = notP.and(q).or(r); // 100<= i && i < 200 || i%2==0
-Predicate<Integer>
+Predicate<Integer> all = notP.and(q).or(r);	// 100<= i && i < 200 || i%2==0
+Predicate<Integer> all2 = notP.and(q.or(r));	// 100 <= i && (i<200 || i%2 ==0)
+```
+```java
+System.out.println(all.test(2));	// true
+System.out.println(all2.test(2));	// false
+```
+- 등가비교를 위한 Predicate의 작성에는 isEqual()를 사용(static메서드)
+```java
+Predicate<String> p = Predicate.isEqual(str1);	// isEquals()은 static메서드
+Boolean result = p.test(str2);	// str1과 str2가 같은지 비교한 결과를 반환
+// 위의 두 줄과 같다.
+boolean result = Predicate.isEqual(str1).test(str2);
+```
+### 예제
+```java
+import java.util.function.*;
+
+class Ex14_3 {
+	public static void main(String[] args) {
+		Function<String, Integer>	f  = (s) -> Integer.parseInt(s, 16);
+		Function<Integer, String>	g  = (i) -> Integer.toBinaryString(i);
+
+		Function<String, String>    h  = f.andThen(g);	// 합성함수. f를 적용 후 g를 적용하라. f의 출력과 g의 입력 타입이 같아야함
+		Function<Integer, Integer>  h2 = f.compose(g);	// g.andThen(f);
+
+		System.out.println(h.apply("FF")); // "FF" → 255 → "11111111"
+		System.out.println(h2.apply(2));   // 2 → "10" → 16
+
+		Function<String, String> f2 = x -> x; // 항등 함수(identity function)
+		System.out.println(f2.apply("AAA"));  // AAA가 그대로 출력됨
+
+		Predicate<Integer> p = i -> i < 100;
+		Predicate<Integer> q = i -> i < 200;
+		Predicate<Integer> r = i -> i%2 == 0;
+		Predicate<Integer> notP = p.negate(); // i >= 100
+
+		Predicate<Integer> all = notP.and(q.or(r));
+		System.out.println(all.test(150));       // true
+
+		String str1 = "abc";
+		String str2 = "abc";
+		
+		// str1과 str2가 같은지 비교한 결과를 반환
+		Predicate<String> p2 = Predicate.isEqual(str1); 
+		boolean result = p2.test(str2);   
+		System.out.println(result);	// true
+	}
+}
+```
+## 컬렉션 프레임웍과 함수형 인터페이스
+### 함수형 인터페이스를 사용하는 컬렉션 프레임웍의 메서드(와일드 카드 생략)
+- Collection
+	- `boolean removeIf(Predicate<E> filter)`: 조건에 맞는 요소를 삭제
+- List
+	- `void replaceAll(UnaryOperator<E> operator)`: 모든 요소를 변환하여 대체
+- Iterable
+	- `void forEach(Consumer<T> action)`: 모든 요소에 작업 action을 수행
+- Map
+	- `V compute(K key, BiFunction<K,V,V> f)`: 지정된 키의 값에 작업 f를 수행
+	- `V computeIfAbsent(K key, Function<K,V> f)`: 키가 없으면, 작업 f 수행 후 추가
+	- `V computeIfPresent(K key, BiFunction<K,V,V> f)`: 지정된 키가 있을 때 작업 f 수행
+	- `V merge(K key, V value, BiFunction<V,V,V> f)`: 모든 요소에 병합작업 f를 수행
+	- `void forEach(BiConsumer<K,V> action)`: 모든 요소에 작업 action을 수행
+	- `void replaceAll(BiFunction<K,V,V> f)`: 모든 요소에 치환작업 f를 수행
+
+### 사용 예시
+```java
+list.forEach(i -> System.out.print(i+","));	// list의 모든 요소를 출력
+list.removeIf(x -> x%2==0 || x%3==0);	// 2 또는 3의 배수를 제거
+list.replaceAll(i -> i*10);	// 모든 요소에 10을 곱한다.
+
+// map의 모든 요소를 {k, v}의 형식으로 출력
+map.forEach((k, v) -> System.out.print("{" + k + ", " + v + "}, "));
+```
+### 예제
+```java
+import java.util.*;
+
+class Ex14_4 {
+	public static void main(String[] args) 	{
+		ArrayList<Integer> list = new ArrayList<>();
+		for(int i=0;i<10;i++)
+			list.add(i);
+
+		// list의 모든 요소를 출력
+		list.forEach(i->System.out.print(i+","));
+		System.out.println();
+		// iterator를 쓰면 코드가 이렇게 길어진다.(출력형식 무시하고 이해하셈)
+//		Iterator it = list.iterator();
+//		while(it.hasNext()) {
+//			System.out.println(it.next());
+//		}
+
+		// list에서 2 또는 3의 배수를 제거한다.
+		list.removeIf(x-> x%2==0 || x%3==0);
+		System.out.println(list);
+
+		list.replaceAll(i->i*10); // list의 각 요소에 10을 곱한다.
+		System.out.println(list);
+
+		Map<String, String> map = new HashMap<>();
+		map.put("1", "1");
+		map.put("2", "2");
+		map.put("3", "3");
+		map.put("4", "4");
+
+		// map의 모든 요소를 {k,v}의 형식으로 출력한다.
+		map.forEach((k,v)-> System.out.print("{"+k+","+v+"},"));
+		System.out.println();
+		// iterator를 쓰면 코드가 이렇게 길어진다.(출력형식 무시하고 이해하셈)
+//		Iterator it = map.entrySet().iterator();
+//		while(it.hasNext()) {
+//			System.out.println(it.next());
+//		}
+	}
+}
+```
+output
+```
+0,1,2,3,4,5,6,7,8,9,
+[1, 5, 7]
+[10, 50, 70]
+{1,1},{2,2},{3,3},{4,4},
+```
+
+# 메서드 참조, 생성자의 메서드 참조
+## 메서드 참조(method reference)
+- 하나의 메서드만 호출하는 람다식은 '메서드 참조'로 간단히 할 수 있다.
+	- 메서드 참조를 람다식으로 바꿔 생각할 수 있는 연습을 해야함.
+|종류|람다|메서드 참조|
+|---|---|---|
+|static메서드 참조|`(x) -> ClassName.method(x)`|`ClassName::method`|
+|인스턴스메서드 참조|`(obj.x) -> obj.method(x)`|`ClassName::method`|
+|특정 객체 인스턴스메서드 참조(거의 안씀!)|`(x) -> obj.method(x)`|obj::method|
+
+### static메서드 참조
+```java
+Integer method(String s) {	// 그저 Integer.parseInt(String s)만 호출
+	return Integer.parseInt(s);
+}
+```
+람다식 변환
+```java
+Function<String, Integer> f = (String s) -> Integer.parseInt(s);
+```
+메서드 참조
+```java
+Function<String, Integer> f = Integer::parseInt;
+```
+### 생성자와 메서드 참조
+- 생성자에 매개변수 없는 경우
+```java
+Supplier<MyClass> s = () -> new MyClass();	// 람다식
+
+Supplier<MyClass> s = MyClass::new;		// 메서드 참조
+```
+- 생성자에 매개변수 있는 경우
+```java
+Function<Integer, MyClass> s = (i) -> new MyClass(i);	// 람다식
+
+Function<Integer, MyClass> s = MyClass::new;		// 메서드 참조
+```
+### 배열과 메서드 참조
+```java
+Function<Integer, int[]> f = x -> new int[x];	// 람다식
+
+Function<Integer, int[]> f = int[]::new;	// 메서드 참조
+```
