@@ -904,3 +904,144 @@ there
 true
 try
 ```
+
+# Optional
+## Optional<T>
+- T타입 객체의 래퍼클래스 - Optional<T>
+	- 모든 종류의 객체 저장가능(null도 가능)
+	- 1) null을 직접 다루는 것은 위험(NullPointerException 발생 가능)하기 때문에 간접적으로 null을 다룰 수 있다.
+	- 2) null 체크를 위해 if문 필수이기 때문에 코드가 지저분해지는 것을 방지
+>```java
+>public final class Optional<T> {
+>	private final T value;	// T타입의 참조변수
+>		...
+>}
+>```
+
+## Optional<T> 객체 생성하기
+- Optional<T> 객체를 생성하는 다양한 방법
+```java
+String str = "abc";
+Optional<String> optVal = Optional.of(str);
+Optional<String> optVal = Optional.of("abc");
+Optional<String> optVal = Optional.of(null);		// NullPointerException 발생
+Optional<String> optVal = Optional.ofNullable(null);	// OK
+```
+- null대신 빈 Optional<T> 객체를 사용하자
+```java
+Optional<String> optVal = null;	// null로 초기화. 바람직하지 않음
+Optional<String> optVal = Optional.empty();	// 빈 객체로 초기화. 바람직.
+```
+
+## Optional<T> 객체의 값 가져오기
+- Optional객체의 값 가져오기 - get(), orElse(), orElseGet(), orElseThrow()
+>```java
+>T orElseGet(Supplier<? extends T> other)
+>T orElseThrow(Supplier<? extends X> exceptionSupplier)
+>```
+```java
+Optional<String> optVal = Optional.of("abc");			
+String str1 = optVal.get();					// optVal에 저장된 값을 반환. null이면 예외발생
+String str2 = optVal.orElse("");				// optVal에 저장된 값이 null일 때는, ""를 반환
+String str3 = optVal.orElseGet(String::new);			// 람다식 사용가능. () -> new String()
+String str4 = optVal.orElseThrow(NullPointerException::new);	// 널이면 예외발생
+```
+- isPresent() - Optional객체의 값이 null이면 false, 아니면 true를 반환
+```java
+if(Optional.ofNullable(str).isPresent()){	// if(str!=null)
+	System.out.println(str)
+}
+```
+>```java
+>ifPresent(Consumer)	// null이 아닐 때만 작업을 수행하고 null이면 아무 작업도 하지 않는다.
+>```
+```java
+Optional.ofNullable(str).ifPresent(System.out::println);
+```
+
+## OptionalInt, OptionalLong, OptionalDouble
+- 기본형 값을 감싸는 래퍼클래스
+	- Optional<T>보다 성능이 좋다.
+>```java
+>public final class OptionalInt {
+>	...
+>	private final boolean isPresent;	// 값이 저장되어 있으면 true
+>	private final int value;		// int타입의 변수
+>}
+>```
+- OptionalInt의 값 가져오기 - int getAsInt()
+
+|Optional클래스|값을 반환하는 메서드|
+|---|---|
+|Optional<T>|T get()|
+|OptionalInt|int getAsInt()|
+|OptionalLong|long getAsLong()|
+|OptionalDouble|double getAsDouble()|
+
+- 빈 Optioanl객체와의 비교
+```java
+OptionalInt opt  = OptionalInt.of(0);	// OptionalInt에 0을 저장. value = 0
+OptionalInt opt2 = OptionalInt.empty();	// 빈 객체를 생성
+
+System.out.println(opt.isPresent());	// true
+System.out.println(opt2.isPresent());	// false
+System.out.println(opt.equals(opt2));	// false
+```
+### 예제
+```java
+import java.util.*;
+
+class Ex14_8 {
+	public static void main(String[] args) {
+		Optional<String>  optStr = Optional.of("abcde");
+		Optional<Integer> optInt = optStr.map(String::length);
+//		Optional<Integer> optInt = optStr.map(s -> s.length);
+		System.out.println("optStr="+optStr.get());
+		System.out.println("optInt="+optInt.get());
+
+		int result1 = Optional.of("123")
+						    .filter(x->x.length() >0)
+						    .map(Integer::parseInt).get();
+
+		int result2 = Optional.of("")
+						    .filter(x->x.length() >0)
+						    .map(Integer::parseInt).orElse(-1);
+
+		System.out.println("result1="+result1);
+		System.out.println("result2="+result2);
+
+		Optional.of("456").map(Integer::parseInt)
+					      .ifPresent(x->System.out.printf("result3=%d%n",x));
+
+		OptionalInt optInt1  = OptionalInt.of(0);   // 0을 저장
+		OptionalInt optInt2  = OptionalInt.empty(); // 빈 객체를 생성
+
+		System.out.println(optInt1.isPresent());   // true
+		System.out.println(optInt2.isPresent());   // false
+
+		System.out.println(optInt1.getAsInt());  // 0
+//		System.out.println(optInt2.getAsInt());  // NoSuchElementException
+		System.out.println("optInt1="+optInt1);
+		System.out.println("optInt2="+optInt2);
+	  	System.out.println("optInt1.equals(optInt2)?"+optInt1.equals(optInt2));
+	}
+}
+```
+output
+```
+optStr=abcde
+optInt=5
+result1=123
+result2=-1
+result3=456
+true
+false
+0
+optInt1=OptionalInt[0]
+optInt2=OptionalInt.empty
+optInt1.equals(optInt2)?false
+```
+# 스트림의 최종연산
+- 중간 연산은 n번 가능하고, stream을 반환
+- 최종 연산은 1번 가능하고 스트림 요소를 소모하며, 스트림이 닫힘
+## 스트림의 최종연산 - forEach()
