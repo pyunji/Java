@@ -672,7 +672,7 @@ Stream<Integer> evenStream = Stream.iterate(0, n->n+2);	// 0, 2, 4, 6, ...
 - generate()는 seed를 사용하지 않는다.
 ```java
 Stream<Double> 	randomStream	= Stream.generate(Math::random);
-Stream<Integer>	oneStream		= Stream.generate(()->1);
+Stream<Integer>	oneStream	= Stream.generate(()->1);
 ```
 
 ## 스트림 만들기 - 파일과 빈 스트림
@@ -693,7 +693,214 @@ long count = emptyStream.count();	// count의 값은 0
 # 스트림의 중간연산
 ## 스트림의 중간연산 1
 - 스트림 자르기 - skip(), limit()
+>```java
+>Stream<T> skip(long n)		// 앞에서부터 n개 건너뛰기
+>Stream<T> limit(long maxSize)	// maxSize 이후의 요소는 잘라냄
+>```
 ```java
-Stream<T> skip(long n)		// 앞에서부터 n개 건너뛰기
-Stream<T> limit(long maxSize)	// maxSize 이후의 요소는 잘라냄
+IntStream intStream = IntStream.rangeClosed(1, 10);	// 12345678910
+intStream.skip(3).limit(5).forEach(System.out::print);	// 45678
+```
+- 스트림의 요소 걸러내기 - filter(), distinct()
+>```java
+>Stream<T> filter (Predicate<? super T> predicate)	// 조건에 맞지 않는 요소 제거
+>Stream<T> distinct()	// 중복제거
+>```
+```java
+IntStream intStream = IntStream.of(1,2,2,3,3,3,4,5,5,6);
+intStream.distinct().forEach(System.our::print);	// 123456
+```
+```java
+IntStream intStream = IntStream.rangeClosed(1,10);	// 12345678910
+intStream.filter(i->i%2==0).forEach(System.out::print);	// 246810
+```
+```java
+// 중간연산은 여러번 사용가능하다.
+intStream.filter(i->i%2!=0 && i%3!=0).forEach(System.out::print);
+intStream.filter(i->i%2!=0).filter(i->i%3!=0).forEach(System.out::print);	// 157
+```
+- 스트림 정렬하기 - sorted()
+>```java
+>Stream<T> sorted()	// 스트림 요소의 기본 정렬(Comparable)로 정렬
+>Stream<T> sorted(Comparator<? super T> Comparator)	// 지정된 Comparator로 정렬
+>```
+![01](./img/stream01.jpg)
+- Comparator의 comparing()으로 정렬 기준을 제공
+>```java
+>comparing(Function<T, U> keyExtractor)
+>comparing(Function<T, U> keyExtractor, Comparator<U> keyComparator)
+>```
+```java
+studentStream.sorted(Comparator.comparint Studenr::getBan)	// 반별로 정렬
+		.forEach(System.out::println);
+```
+- 추가 정렬 기준을 제공할 때는 thenComparing()을 사용
+>```java
+>thenComparing(Comparator<T> other)
+>thenComparing(Function<T, U> keyExtractor)
+>thenComparing(Function<T, U> keyExtractor, Comparator<U> keyComp)
+>```
+```java
+studentStream.sorted(Comparator.comparing(Student::getBan))	// 반별로 정렬
+		.thenComparing(Student::getTotalScore)		// 총점별로 정렬
+		.thenComparing(Student::getName)		// 이름별로 정렬
+		.forEach(System.out::println);
+```
+### 예제
+```java
+import java.util.*;
+import java.util.stream.*;
+
+class Ex14_5 {
+	public static void main(String[] args) {
+		Stream<Student> studentStream = Stream.of(
+						new Student("이자바", 3, 300),
+						new Student("김자바", 1, 200),
+						new Student("안자바", 2, 100),
+						new Student("박자바", 2, 150),
+						new Student("소자바", 1, 200),
+						new Student("나자바", 3, 290),
+						new Student("감자바", 3, 180)
+					);
+
+		studentStream.sorted(Comparator.comparing(Student::getBan) // 반별 정렬
+		// studentStream.sorted(Comparator.comparing((Student s) -> s.getBan())) // 람다식으로
+		 	.thenComparing(Comparator.naturalOrder()))     	// 기본 정렬
+			.forEach(System.out::println);
+	}
+}
+
+class Student implements Comparable<Student> {
+	String name;
+	int ban;
+	int totalScore;
+	Student(String name, int ban, int totalScore) { 
+		this.name =name;
+		this.ban =ban;
+		this.totalScore =totalScore;
+	}
+
+	public String toString() { 
+	   return String.format("[%s, %d, %d]", name, ban, totalScore); 
+	}
+
+	String getName()     { return name;}
+	int getBan()         { return ban;}
+	int getTotalScore()  { return totalScore;}
+
+   // 총점 내림차순을 기본 정렬로 한다.
+	public int compareTo(Student s) { 
+		return s.totalScore - this.totalScore;
+	}
+}
+```
+output
+```
+[김자바, 1, 200]
+[소자바, 1, 200]
+[박자바, 2, 150]
+[안자바, 2, 100]
+[이자바, 3, 300]
+[나자바, 3, 290]
+[감자바, 3, 180]
+```
+# 스트림의 중간연산 2
+- 스트림의 요소 변환하기 - map()
+>```java
+>Stream<R> map(Function<? super T, ? extends R> mapper)	// Stream<T> -> Stream<R>
+>```
+```java
+Stream<File> fileStream = Stream.of(
+	new File("Ex1.java"),
+	new File("Ex1"),
+	new File("Ex1.bak"),
+	new File("Ex2.java"),
+	new File("Ex1.txt")
+);
+// Stream<String> filenameStream = fileStream.map((File f) -> f.getName());
+Stream<String> filenameStream = fileStream.map(File::getName);
+filenameStream.forEach(System.out::println);	// 스트림의 모든 파일의 이름을 출력
+```
+ex) 파일스트림(Stream<File>)에서 파일 확장자(대문자)를 중복없이 뽑아내기
+```java
+fileStream.map(File::getName)			// Stream<file> -> Stream<String>
+	.filter(s->s.indexOf('.') != -1)	// 확장자가 없는 것은 제외
+	.map(s->s.substring(s.indexOf('.')+1))	// Stream<String> -> Stream<String>
+	.map(String::toUpperCase)		// Stream<String> -> Stream<String>
+	.distinct()
+	.forEach(System.out::print)	// JAVABAKTXT
+```
+- 스트림의 요소를 소비하지 않고 엿보기 - peek()
+
+>```java
+>Stream<T>	peek(Consumer<? super T> >action)	// 중간 연산(스트림을 소비X)
+>void		forEach(Consumer<? super T> >action)	// 최종 연산(스트림을 소비O)
+>```
+
+- 스트림의 스트림을 스트림으로 변환 - flatMap()
+```java
+Stream<String[]> strArrStrm = Stream.of(new String[]{"abc", "def", "ghi"},
+					new String[]{"ABC","GHI","JKLMN"});
+```
+```java
+Stream<Stream<String>> strStrStrm = strArrStrm.map(Arrays::stream);
+```
+![02](./img/stream02.jpg)
+```java
+Stream<String> strStrStrm = strArrStrm.flatMap(Arrays::stream);	// Arrays.stream(T[])
+```
+![03](./img/stream03.jpg)
+### 예제
+```java
+import java.util.*;
+import java.util.stream.*;
+
+class Ex14_7 {
+	public static void main(String[] args) {
+		Stream<String[]> strArrStrm = Stream.of(
+			new String[]{"abc", "def", "jkl"},
+			new String[]{"ABC", "GHI", "JKL"}
+		);
+
+//		Stream<Stream<String>> strStrmStrm = strArrStrm.map(Arrays::stream);
+		Stream<String> strStrm = strArrStrm.flatMap(Arrays::stream);
+
+		strStrm.map(String::toLowerCase)
+			   .distinct()
+			   .sorted()
+			   .forEach(System.out::println);
+		System.out.println();
+
+		String[] lineArr = {
+			"Believe or not It is true",
+			"Do or do not There is no try",
+		};
+
+		Stream<String> lineStream = Arrays.stream(lineArr);
+		lineStream.flatMap(line -> Stream.of(line.split(" +")))	// 하나이상의 공백을 나타내는 정규식
+			.map(String::toLowerCase)
+			.distinct()
+			.sorted()
+			.forEach(System.out::println);
+		System.out.println();
+	}
+}
+```
+output
+```
+abc
+def
+ghi
+jkl
+
+believe
+do
+is
+it
+no
+not
+or
+there
+true
+try
 ```
