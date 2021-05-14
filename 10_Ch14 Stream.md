@@ -63,7 +63,9 @@ int sum = strStream.parallel()	// 병렬 스트림으로 전환(속성만 변경
 # 스트림만들기
 ## 스트림 만들기 - 컬렉션
 - Collection인터페이스의 stream()으로 컬렉션을 스트림으로 변환
+>```java
 > Stream<E> stream()	// Collection 인터페이스의 메서드
+>```
 
 ```java
 List<Integer>	list = Arrays.asList(1,2,3,4,5);
@@ -102,10 +104,12 @@ intStream.limit(5).forEach(System.out::println);	// 5개의 요소만 출력한�
 
 IntStream intStream = new Random().ints(5);	// 크기가 5인 난수 스트림을 반환
 ```
+>```
 > Random클래스에 정의된 메서드의 반환범위
 > Integer.MIN_VALUE <= ints() <= Integer.MAX_VALUE
 > Long.MIN_VALUE <= longs() <= Long.MAX_VALUE
 > 0.0 <= doubles() < 1.0
+>```
 
 \* 지정된 범위의 난수를 요소로 갖는 스트림을 생성하는 메서드(Random클래스)
 ```java
@@ -658,9 +662,13 @@ public interface Collector<T,A,R> {	// T(요소)를 A에 누적한 다음, 결�
 - Collectors클래스는 다양한 기능의 컬렉터(Collector를 구현한 클래스)를 제공
 
 >변환 - `mapping()`, `toList()`, `toSet()`, `toMap()`, `toCollection()`, ...
+
 >통계 - `counting()`, `summingInt()`, `averagingInt()`, `maxBy()`, `minBy()`, `summarizingInt()`, ...
+
 >문자열 결합 - `joining()`
+
 >리듀싱 - `reducing()`
+
 >그룹화와 분할 = `groupingBy()`, `partitioningBy()`, `collectingAndThen()`
 
 ## 스트림을 컬렉션, 배열로 변환
