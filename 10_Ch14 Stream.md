@@ -113,13 +113,13 @@ IntStream intStream = new Random().ints(5);	// 크기가 5인 난수 스트림�
 
 \* 지정된 범위의 난수를 요소로 갖는 스트림을 생성하는 메서드(Random클래스)
 ```java
-IntStream	 ints(int begin, int end)	// 무한 스트림
-LongStream	 long(long begin, long end)
-DoubleStream doubles(double begin, double end)
+IntStream	ints(int begin, int end)	// 무한 스트림
+LongStream	long(long begin, long end)
+DoubleStream 	doubles(double begin, double end)
 
-IntStream	 ints(long streamSize, int begin, int end)	// 유한 스트림
-LongStream	 longs(long streamSize, long begin, long end)
-DoubleStream doubles(long streamSize, double begin, double end)
+IntStream	ints(long streamSize, int begin, int end)	// 유한 스트림
+LongStream	longs(long streamSize, long begin, long end)
+DoubleStream	doubles(long streamSize, double begin, double end)
 ```
 
 ## 스트림 만들기 - 특정 범위의 정수
@@ -199,6 +199,118 @@ intStream.filter(i->i%2!=0).filter(i->i%3!=0).forEach(System.out::print);	// 157
 >Stream<T> sorted(Comparator<? super T> Comparator)	// 지정된 Comparator로 정렬
 >```
 ![01](./img/stream01.jpg)
+
+
+---
+### ❗ Comparator.reversedOrder()에 대한 고찰
+```java
+public class Test {
+    public static void main(String[] args) {
+        Comparator<String> comp = (o1, o2) -> {
+            if(o1.length()<o2.length())
+                return -1;
+            else if(o1.length()>o2.length())
+                return 1;
+            return 0;
+        };
+        IntStream intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        Stream<String> binaryString = intStream.mapToObj(i -> ""+i).sorted();
+        System.out.println(Arrays.toString(binaryString.toArray()));
+	// [0, 1, 11, 112, 123, 42, 7]
+
+        intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        binaryString = intStream.mapToObj(i -> "" + i).sorted(Comparator.reverseOrder());
+        System.out.println(Arrays.toString(binaryString.toArray()));
+	// [7, 42, 123, 112, 11, 1, 0]
+
+        intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        binaryString = intStream.mapToObj(i -> "" + i).sorted(comp);
+        System.out.println(Arrays.toString(binaryString.toArray()));
+	// [1, 7, 0, 11, 42, 123, 112]
+
+        intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        binaryString = intStream.mapToObj(i -> "" + i).sorted(comp).sorted(Comparator.reverseOrder());
+        System.out.println(Arrays.toString(binaryString.toArray()));
+	// [7, 42, 123, 112, 11, 1, 0]
+
+		intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        binaryString = intStream.mapToObj(i -> "" + i).sorted(comp.reversed());
+        System.out.println(Arrays.toString(binaryString.toArray()));
+	// [123, 112, 11, 42, 1, 7, 0]
+    }
+}
+```
+- `sorted(comp).sorted(Comparator.reverseOrder)`를 수행한 값으로 [112, 123, 42, 11, 0, 7, 1]을 기대했지만 역순정렬만 수행한 결과와 동일하게 나왔다.
+- 따라서 `Comparator.reverseOrder()`는 기존 정렬된 순서의 역순정렬이 아닌, **기본 정렬의 역순**으로 정렬되게끔 한 것이다.
+- 만들어놓은 comp에 `.reversed()`를 적용하면 역순 비스무리하게 정렬은 되지만, comp를 만들 때 같은 길이의 문자열의 경우 처리를 안해줬기 때문에 바라는 결과가 안나온다.
+- 아래 코드도 참고하자.
+```java
+intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+binaryString = intStream.mapToObj(i -> "" + i).sorted(Comparator.comparing(String::length));
+System.out.println(Arrays.toString(binaryString.toArray()));
+// [1, 7, 0, 11, 42, 123, 112]
+
+intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+binaryString = intStream.mapToObj(i -> "" + i).sorted(Comparator.comparing(String::length).reversed());
+System.out.println(Arrays.toString(binaryString.toArray()));
+// [123, 112, 11, 42, 1, 7, 0]
+```
+
+<br>
+
+
+- comp를 수정해보자
+```java
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+public class Test {
+    public static void main(String[] args) {
+        Comparator<String> comp = (o1, o2) -> {
+            if(o1.length()<o2.length())
+                return -1;
+            else if(o1.length()>o2.length())
+                return 1;
+            else{
+                return o1.compareTo(o2);
+            }
+        };
+        IntStream intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        Stream<String> binaryString = intStream.mapToObj(i -> ""+i).sorted();
+        System.out.println(Arrays.toString(binaryString.toArray()));
+	// [0, 1, 11, 112, 123, 42, 7]
+
+        intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        binaryString = intStream.mapToObj(i -> "" + i).sorted(Comparator.reverseOrder());
+        System.out.println(Arrays.toString(binaryString.toArray()));
+	// [7, 42, 123, 112, 11, 1, 0]
+
+        intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        binaryString = intStream.mapToObj(i -> "" + i).sorted(comp);
+        System.out.println(Arrays.toString(binaryString.toArray()));
+	// [0, 1, 7, 11, 42, 112, 123]
+
+        intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        binaryString = intStream.mapToObj(i -> "" + i).sorted(comp).sorted(Comparator.reverseOrder());
+        System.out.println(Arrays.toString(binaryString.toArray()));
+	// [7, 42, 123, 112, 11, 1, 0]
+
+        intStream = IntStream.of(new int[]{1, 11, 42, 7, 123, 112, 0});
+        binaryString = intStream.mapToObj(i -> "" + i).sorted(comp.reversed());
+        System.out.println(Arrays.toString(binaryString.toArray()));		
+	// [123, 112, 42, 11, 7, 1, 0]
+    }
+}
+```
+- 길이가 같은 문자열의 경우 기존 문자열이 가지고 있는 `String.compareTo()`연산을 하게 했다.
+	- 이처럼 comparator를 잘 만드는 것이 중요하다.
+
+---
+
+
+
 - Comparator의 comparing()으로 정렬 기준을 제공
 >```java
 >comparing(Function<T, U> keyExtractor)
@@ -215,9 +327,9 @@ studentStream.sorted(Comparator.comparing(Student::getBan))	// 반별로 정렬
 >thenComparing(Function<T, U> keyExtractor, Comparator<U> keyComp)
 >```
 ```java
-studentStream.sorted(Comparator.comparing(Student::getBan))	// 반별로 정렬
+studentStream.sorted(Comparator.comparing(Student::getBan)	// 반별로 정렬
 		.thenComparing(Student::getTotalScore)		// 총점별로 정렬
-		.thenComparing(Student::getName)		// 이름별로 정렬
+		.thenComparing(Student::getName))		// 이름별로 정렬
 		.forEach(System.out::println);
 ```
 ### 예제
@@ -378,7 +490,33 @@ there
 true
 try
 ```
-
+#### 참고
+```java
+String[] lineArr = {
+                "Believe or not It is true",
+                "Do or do not There is no try",
+        };
+lineStream.map(line -> line.split(" +"))
+                .forEach(s->System.out.println(Arrays.toString(s)));
+```
+output
+```
+[Believe, or, not, It, is, true]
+[Do, or, do, not, There, is, no, try]
+```
+```java
+        String[] lineArr = {
+                "Believe or not It is true",
+                "Do or do not There is no try",
+        };
+        Stream<String> lineStream = Arrays.stream(lineArr);
+        lineStream.flatMap(line -> Stream.of(line.split(" +")))
+                .forEach(s->System.out.print(s+" "));
+```
+output
+```
+Believe or not It is true Do or do not There is no try 
+```
 # Optional
 ## Optional<T>
 - T타입 객체의 래퍼클래스 - Optional<T>
@@ -455,7 +593,7 @@ Optional.ofNullable(str).ifPresent(System.out::println);
 - 빈 Optioanl객체와의 비교
 ```java
 OptionalInt opt  = OptionalInt.of(0);	// OptionalInt에 0을 저장. value = 0
-OptionalInt opt2 = OptionalInt.empty();	// 빈 객체를 생성
+OptionalInt opt2 = OptionalInt.empty();	// 빈 객체를 생성 value=0, isPresent=false
 
 System.out.println(opt.isPresent());	// true
 System.out.println(opt2.isPresent());	// false
@@ -724,11 +862,11 @@ Optional<Student> topStudent = stuStream
 IntStream intStream = new Random().ints(1, 46).distinct().limit(6);
 
 OptionalInt		max = intStream.reduce(Integer::max);
-Optional<Integer>	max = intStream.boxed().collect(reducint(Integer::max));
+Optional<Integer>	max = intStream.boxed().collect(reducing(Integer::max));
 ```
 ```java
 long sum = intStream.reduce(0, (a, b -> a + b));
-long sum = intStream.bosed().collect(reducing(0, (a, b)-> a + b));
+long sum = intStream.boxed().collect(reducing(0, (a, b)-> a + b));
 ```
 ```java
 int grandTotal = stuStream.map(Student::getTotalScore).reduce(0, Integer::sum);
@@ -774,7 +912,7 @@ System.out.println("여학생 1등 :" + topScoreBySex.get(false));	// 여학생 
 Map<Boolean, Map<Boolean, List<Student>>> failedStuBySex = stuStream		// 다중 분할
 		.collect(partitioningBy(Student::isMale,			// 1. 성별로 분할(남/녀)
 				partitioningBy(s -> s.getScore() < 150)));	// 2. 성적으로 분할(불합격/합격)
-List<Student> failedMaleStu		= failedStuBySex.get(true).get(true);
+List<Student> failedMaleStu	= failedStuBySex.get(true).get(true);
 List<Student> failedfeMaleStu	= failedStuBySex.get(false).get(true);
 ```
 ### 예제
