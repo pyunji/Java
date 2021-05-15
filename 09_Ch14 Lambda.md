@@ -185,7 +185,7 @@ interface MyFunction {
 ```
 위와 같은 함수형 인터페이스가 있을 때, 아래와 같은 메서드를 작성했다고 가정하자.
 ```java
-void aMethod(Myfunction f) {
+void aMethod(MyFunction f) {
     f.myMethod();   // MyFunction에 의해 정의된 메서드 호출
 }
 ```
@@ -349,7 +349,7 @@ class Ex14_2 {
 	}
 }
 ```
-# Predicatd의 결합. CF와 함수형 인터페이스
+# Predicate의 결합. CF와 함수형 인터페이스
 ## Predicate의 결합
 - and(), or(), negate()로 두 Predicate를 하나로 결합(default메서드)
 ```java
@@ -379,8 +379,8 @@ import java.util.function.*;
 
 class Ex14_3 {
 	public static void main(String[] args) {
-		Function<String, Integer>	f  = (s) -> Integer.parseInt(s, 16);
-		Function<Integer, String>	g  = (i) -> Integer.toBinaryString(i);
+		Function<String, Integer>   f  = (s) -> Integer.parseInt(s, 16);
+		Function<Integer, String>   g  = (i) -> Integer.toBinaryString(i);
 
 		Function<String, String>    h  = f.andThen(g);	// 합성함수. f를 적용 후 g를 적용하라. f의 출력과 g의 입력 타입이 같아야함
 		Function<Integer, Integer>  h2 = f.compose(g);	// g.andThen(f);
@@ -489,6 +489,7 @@ output
 ## 메서드 참조(method reference)
 - 하나의 메서드만 호출하는 람다식은 '메서드 참조'로 간단히 할 수 있다.
 	- 메서드 참조를 람다식으로 바꿔 생각할 수 있는 연습을 해야함.
+
 |종류|람다|메서드 참조|
 |---|---|---|
 |static메서드 참조|`(x) -> ClassName.method(x)`|`ClassName::method`|
