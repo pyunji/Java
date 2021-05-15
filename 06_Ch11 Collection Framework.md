@@ -1,6 +1,11 @@
 # Ch11 
 - 컬렉션 프레임웍은 객체지향 다음으로 중요한 부분!
 - 빠르게 전체적으로 여러번 반복하는 것이 중요!
+![cf_update01](./img/cf_update01.jpg)
+
+<br>
+
+![cf_update02](./img/cf_update02.jpg)
 ## 컬렉션 프레임웍(collections framework)
 - 컬렉션 
     - 여러 객체(데이터)를 모아 놓은 것을 의미
