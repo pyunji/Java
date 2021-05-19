@@ -210,7 +210,7 @@ class ThreadEx7_1 extends Thread {
 - 작업의 중요도에 따라 쓰레드의 우선순위를 다르게 하여 특정 쓰레드가 더 많은 작업시간을 갖게 할 수 있다.
 - Java에서는 우선순위를 1~10 사이의 값으로 지정할 수 있고, 별도의 지정이 없으면 보통 우선순위인 5로 설정된다.
 ```
-void set priority(int newPriority)  쓰레드의 우선순위를 지정한 값으로 변경한다.
+void setPriority(int newPriority)  쓰레드의 우선순위를 지정한 값으로 변경한다.
 int getPriority()                   쓰레드의 우선순위를 반환한다.
 ```
 ```java
