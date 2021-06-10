@@ -166,7 +166,7 @@ String S1 = "A" + "B" // "AB"
 - `any type` + `문자열` = `문자열`
 
 ## 두 변수의 값 교환하기
-- tmp라는 하나의 변수가 추가적으로 필요! (뭐 당연한거지..우유랑 주스랑 바꾼다고 서로 디립따 부으면 그게 바뀌냐 섞이지...)
+- tmp라는 하나의 변수가 추가적으로 필요!
 
 ## 기본형과 참조형
 ### 기본형(Primitive type)
@@ -655,7 +655,7 @@ System.out.println(Arrays.toString(배열));
 ## String배열의 선언과 생성
 |자료형|기본값|
 |---|---|
-|boolean|false
+|boolean|false|
 |char|'\u0000'|
 |byte, short, int|0|
 |long|0L|
