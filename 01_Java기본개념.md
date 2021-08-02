@@ -588,6 +588,7 @@ for (int i = 1; i <= 20; i++) {
     Doc 주석
 */
 ```
+    - Doc 주석 사용 후 cmd 창에서  `javadoc 파일이름`을 실행하면 java api가 만들어진다.
 
 # 배열
 - **같은타입**의 여러 변수를 하나의 묶음으로 다루는 것
@@ -713,4 +714,34 @@ System.out.println(Arrays.toString(arr));
 [4, 2, 1]
 [0, 4, 2, 1, 4, 3]
 [0, 1, 2, 3, 4, 4]
+```
+
+# 가변인자(varargs)
+```
+함수이름(매개변수타입... 변수명) {
+
+}
+```
+## 특징
+- 가변인자는 argument를 0개부터 n개까지 넣을 수 있다.
+- 가변인자는 컴파일시 배열로 처리된다.
+### 예시
+- 매개변수의 개수가 다른 메서드를 오버로딩 한다고 가정하면
+- 매개변수를 1개 받는 메서드 부터 100개까지 받는 메서드를 모두 만들어야할까?
+
+```java
+public static int plus(int... num) {   // 가변길이 매개변수
+    int sum = 0;
+    for (int i = 0; i < num.length; i++) {
+        sum += num[i];
+    }
+    return sum;
+}
+
+public static void main(String[] args) {
+    // 매개변수의 개수별로 오버로딩하지 않아도 실행된다.
+    System.out.println(plus(1,2));
+    System.out.println(plus(1,2,3));
+    System.out.println(plus(1,2,3,4,5));
+}
 ```
